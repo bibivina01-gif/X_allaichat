@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>트위터 성향표 메이커 - 완벽 일치 (그림자 제거/테두리 추가)</title>
+    <title>트위터 성향표 메이커 - 완벽 일치 (삭제 기능 확실하게 추가됨)</title>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
@@ -33,6 +33,10 @@
         .file-upload-btn { display: block; background: #e8e6f8; color: var(--ui-accent); padding: 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 800; cursor: pointer; text-align: center; border: none; margin-bottom: 10px; }
         .file-upload-btn input[type="file"] { display: none; }
         .btn-clear { background: #fee2e2; color: #ef4444; border: none; padding: 6px 10px; border-radius: 6px; font-size: 0.7rem; cursor: pointer; font-weight: bold; margin-left: 10px;}
+        
+        /* 🔥 눈에 띄는 삭제 버튼 스타일 🔥 */
+        .btn-delete { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; font-weight: 900; transition: 0.2s; }
+        .btn-delete:hover { background: #fca5a5; color: white; }
 
         /* 조절 UI */
         .crop-ui-box { background: white; border: 1px solid var(--ui-border); border-radius: 8px; padding: 15px; display: none; margin-bottom: 15px; }
@@ -53,7 +57,9 @@
         .btn-save { width: calc(100% - 40px); margin: 0 20px 20px 20px; padding: 15px; background: var(--ui-accent); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 800; font-size: 1rem; box-shadow: 0 4px 15px rgba(139,128,249,0.4); }
 
         /* === 캔버스 (우측) === */
-        #canvas-wrapper { flex: 1; display: flex; align-items: flex-start; justify-content: center; overflow: auto; padding: 50px; }
+        #canvas-wrapper { flex: 1; display: flex; align-items: flex-start; justify-content: center; overflow: auto; padding: 10px; }
+        #capture-target { padding: 40px; background: transparent; display: flex; justify-content: center; align-items: center; }
+
         #preview-card { width: 1000px; min-height: 700px; height: fit-content; background: #fdfbf7; position: relative; border-radius: 20px; display: flex; align-items: center; justify-content: center; padding: 60px; box-sizing: border-box; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.1); }
 
         /* 성향표 중앙 */
@@ -83,7 +89,6 @@
         .frame-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
         .abs-frame { position: absolute; pointer-events: auto; } 
         
-        /* 🔥 테두리 적용을 위해 box-sizing 추가 🔥 */
         .polaroid-frame { background: white; padding: 12px 12px 18px 12px; display: flex; flex-direction: column; align-items: center; border-radius: 4px; box-sizing: border-box; border: 1px solid transparent; }
         .out-pol { width: 180px; height: 210px; }
         .p-txt { margin-top: 12px; font-size: 0.9rem; font-weight: 800; color: #334155; text-align: center; }
@@ -163,25 +168,27 @@
 </div>
 
 <div id="canvas-wrapper">
-    <div id="preview-card">
-        <div class="frame-layer" id="drag-layer"></div>
-        <div id="central-chart">
-            <div class="info-card profile-row">
-                <div class="out-viewport out-pfp" id="out-pfp-vp"><img id="out-pfp-img"></div>
-                <div class="name-area">
-                    <h1 id="d-name">나비 <span class="age-badge" id="d-age">성인</span></h1>
-                    <p id="d-handle">@navibibi</p>
+    <div id="capture-target">
+        <div id="preview-card">
+            <div class="frame-layer" id="drag-layer"></div>
+            <div id="central-chart">
+                <div class="info-card profile-row">
+                    <div class="out-viewport out-pfp" id="out-pfp-vp"><img id="out-pfp-img"></div>
+                    <div class="name-area">
+                        <h1 id="d-name">나비 <span class="age-badge" id="d-age">성인</span></h1>
+                        <p id="d-handle">@navibibi</p>
+                    </div>
                 </div>
+                <div class="info-card">
+                    <span class="card-title">BASIC</span>
+                    <div class="basic-grid"><div><b>이별</b><span id="d-b1">블언블</span></div><div><b>타장르</b><span id="d-b2">No</span></div></div>
+                </div>
+                <div class="info-card"><span class="card-title">TENDENCY</span><div class="out-tag-list" id="d-orient"></div></div>
+                <div class="info-card"><span class="card-title">ACCOUNT</span><div class="out-tag-list" id="d-acc"></div></div>
+                <div class="info-card"><span class="card-title">ABOUT</span><div class="about-text" id="d-about"></div></div>
             </div>
-            <div class="info-card">
-                <span class="card-title">BASIC</span>
-                <div class="basic-grid"><div><b>이별</b><span id="d-b1">블언블</span></div><div><b>타장르</b><span id="d-b2">No</span></div></div>
-            </div>
-            <div class="info-card"><span class="card-title">TENDENCY</span><div class="out-tag-list" id="d-orient"></div></div>
-            <div class="info-card"><span class="card-title">ACCOUNT</span><div class="out-tag-list" id="d-acc"></div></div>
-            <div class="info-card"><span class="card-title">ABOUT</span><div class="about-text" id="d-about"></div></div>
+            <div class="watermark">@navibibi01</div>
         </div>
-        <div class="watermark">@navibibi01</div>
     </div>
 </div>
 
@@ -299,22 +306,32 @@
         reader.readAsDataURL(input.files[0]);
     }
 
-    // 🔥 자동 대비 테두리 계산 함수 🔥
     function getBorderColor(hex) {
         if(hex.indexOf('#') === 0) hex = hex.slice(1);
         if(hex.length === 3) hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
         const r = parseInt(hex.slice(0, 2), 16), g = parseInt(hex.slice(2, 4), 16), b = parseInt(hex.slice(4, 6), 16);
         const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-        // 배경이 밝으면 어두운 회색, 배경이 어두우면 밝은 흰색/회색을 반환
         return luma < 128 ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.15)';
+    }
+
+    // 🔥 요소 삭제 함수 🔥
+    function removeElement(id) {
+        const wrap = document.getElementById(`out-${id}-wrap`);
+        if (wrap) wrap.remove();
+        const ctrl = document.getElementById(`${id}-ctrl`);
+        if (ctrl) ctrl.remove();
     }
 
     function addPolaroid(left=150, top=150, rot=0) {
         pCount++; const id = pCount, pID = `p-${id}`;
         const ctrl = document.createElement('div');
+        ctrl.id = `${pID}-ctrl`;
         ctrl.innerHTML = `
             <div style="background:#f1f5f9; border:1px solid #e2e8f0; padding:15px; border-radius:10px; margin-bottom:15px;">
-                <b style="font-size:0.8rem;">📷 폴라로이드 ${id}</b>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <b style="font-size:0.8rem;">📷 폴라로이드 ${id}</b>
+                    <button class="btn-delete" onclick="removeElement('${pID}')">삭제</button>
+                </div>
                 <label class="file-upload-btn">사진 업로드<input type="file" accept="image/*" onchange="initCrop(this, '${pID}')"></label>
                 <div class="crop-ui-box" id="${pID}-ui"><div class="crop-viewport shape-rect" id="${pID}-vp"><img id="${pID}-img"></div><div class="slider-wrap"><span>확대</span><input type="range" id="${pID}-zoom" min="0.5" max="3" step="0.01" value="1"></div></div>
                 <input type="text" id="${pID}-txt" placeholder="하단 문구" oninput="syncOuter('${pID}')" style="margin-top:10px;">
@@ -336,7 +353,6 @@
         wrap.id = `out-${pID}-wrap`; wrap.className = 'abs-frame';
         wrap.style.left = left+'px'; wrap.style.top = top+'px';
         
-        // 그림자 요소 삭제, 테두리는 JS에서 동기화됨
         wrap.innerHTML = `
             <div id="out-${pID}-trans" style="transform: scale(1) rotate(${rot}deg); display: inline-block; transform-origin: center;">
                 <div class="polaroid-frame" id="out-${pID}-frame">
@@ -356,9 +372,14 @@
             slotsOut += `<div class="out-viewport out-fc" id="out-${fcID}-${i}-vp"><img id="out-${fcID}-${i}-img"></div>`;
         }
         const ctrl = document.createElement('div');
+        ctrl.id = `${fcID}-ctrl`;
         ctrl.innerHTML = `
             <div style="background:#f1f5f9; border:1px solid #e2e8f0; padding:15px; border-radius:10px; margin-bottom:15px;">
-                <b style="font-size:0.8rem;">🎞️ 인생네컷 ${id}</b>${slotsUI}
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <b style="font-size:0.8rem;">🎞️ 인생네컷 ${id}</b>
+                    <button class="btn-delete" onclick="removeElement('${fcID}')">삭제</button>
+                </div>
+                ${slotsUI}
                 <input type="text" id="${fcID}-txt" value="MEMORIES 2026" oninput="syncOuter('${fcID}')" style="margin-top:10px;">
                 
                 <div style="display:flex; gap:10px; margin-top:10px; align-items:center;">
@@ -375,7 +396,6 @@
         wrap.id = `out-${fcID}-wrap`; wrap.className = 'abs-frame';
         wrap.style.left = left+'px'; wrap.style.top = top+'px';
         
-        // 그림자 요소 삭제, 테두리는 JS에서 동기화됨
         wrap.innerHTML = `
             <div id="out-${fcID}-trans" style="transform: scale(1) rotate(${rot}deg); display: inline-block; transform-origin: center;">
                 <div class="four-cut" id="out-${fcID}-frame">
@@ -402,7 +422,7 @@
             const txt = document.getElementById(`out-${id}-txt`);
             if(txt) { txt.innerText = document.getElementById(`${id}-txt`).value; txt.style.color = document.getElementById(`${id}-tc`).value; }
             
-            // 🔥 테두리 동기화 로직 🔥
+            // 테두리 동기화
             const borderChk = document.getElementById(`${id}-border-chk`);
             if(borderChk && borderChk.checked) {
                 frame.style.border = `1px solid ${getBorderColor(bgColor)}`;
@@ -425,18 +445,22 @@
     }
 
     function saveImage() {
-        const preview = document.getElementById('preview-card');
+        const preview = document.getElementById('capture-target'); 
         const btn = document.querySelector('.btn-save');
         btn.innerText = "저장 중...";
         const wrapper = document.getElementById('canvas-wrapper');
         const ox = wrapper.scrollLeft, oy = wrapper.scrollTop;
         wrapper.scrollLeft = 0; wrapper.scrollTop = 0;
         
-        // 그림자가 없으므로 이제 아주 깨끗하게 저장됩니다
-        html2canvas(preview, { scale: 2, useCORS: true, backgroundColor: null, logging: false }).then(canvas => {
+        html2canvas(preview, { 
+            scale: 2, 
+            useCORS: true, 
+            backgroundColor: null, 
+            logging: false 
+        }).then(canvas => {
             const link = document.createElement('a'); 
             link.href = canvas.toDataURL('image/png', 1.0); 
-            link.download = 'Tendency_Chart.png'; 
+            link.download = 'My_Profile.png'; 
             link.click();
             btn.innerText = "[ 고화질 이미지로 저장 ]";
             wrapper.scrollLeft = ox; wrapper.scrollTop = oy;
